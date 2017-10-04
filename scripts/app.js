@@ -70,7 +70,6 @@ function onError(xhr, status, errorThrown) {
 	console.log("Status: " + status);
 	console.dir(xhr);
 	alert("Sorry, there was a problem!");
-	
 }
 
 // function initMap() {
@@ -78,7 +77,7 @@ function onError(xhr, status, errorThrown) {
 //           center: {lat: 37.78, lng: -122.44},
 //           zoom: 6
 //         });
-        
+
 // }
 
 function markQuake(position, map) {
