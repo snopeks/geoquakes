@@ -6,3 +6,10 @@
   height: 600px;
   margin-top: 20px;
 }
+button {
+  margin: 10px;
+}
+
+.btn {
+  margin: 0;
+}

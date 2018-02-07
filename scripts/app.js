@@ -1,18 +1,40 @@
+console.log("Let's get coding!");
 // define globals
-var weekly_quakes_endpoint = "http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson";
+var weekly_quakes_endpoint = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
+var monthly_quakes_endpoint = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson";
+var hourly_quakes_endpoint = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson";
 
-$(document).ready(function() {
-  console.log("Let's get coding!");
   // CODE IN HERE!
   // initMap();
-  getQuakes();
-});
+  var endpointUrl = weekly_quakes_endpoint;
+  getQuakes(endpointUrl);
 
-function getQuakes(){
+
+  //want to swap in different endpoints based on button clicking.
+  $('button').on('click', function(){
+    if($(this).hasClass('btn-warning')){
+      $("p").remove()
+      endpointUrl = monthly_quakes_endpoint;
+      console.log("want to pass in the monthly endpoint")
+      getQuakes(endpointUrl)
+    } else if($(this).hasClass('btn-primary')){
+      $("p").remove()
+      endpointUrl = weekly_quakes_endpoint;
+      console.log("want to pass in the weekly endpoint")
+      getQuakes(endpointUrl)
+    } else if($(this).hasClass('btn-danger')){
+      $("p").remove()
+      endpointUrl = hourly_quakes_endpoint;
+      console.log("want to get hourly quakes")
+      getQuakes(endpointUrl)
+    }
+  })
+
+function getQuakes(endpoint){
   //call the ajax function, see if it is successful or errors out
 	  $.ajax({
 				method: "GET",
-				url: weekly_quakes_endpoint,
+				url: endpoint,
 				dataType: 'JSON',
 				success: onSuccess,
 				error: onError
@@ -33,12 +55,14 @@ function onSuccess(json) {
 
   //for every quake recorded in the data json
 	json.features.forEach(function(quake){
+    //get the magnitude of each quake
+    var mag = quake.properties.mag;
     //get the title
-		var fullTitle = quake.properties.title;
+    var fullTitle = quake.properties.title;
     //parse the title to only have the city and country
 		var title = (fullTitle.split(" of "))[1];
     //sanity check: see how we are splitting the title
-    console.log(fullTitle.split(" of "));
+    // console.log(fullTitle.split(" of "));
 
     //get coordinates
 		var longitude = quake.geometry.coordinates[0];
@@ -50,16 +74,23 @@ function onSuccess(json) {
     //calculate difference between now and quake time, hour should be integer
     var hoursAgo = parseInt(((now.getTime()-time)/1000/60/60));
 
+    //add a variable that will keep track of the quake magnitude
+    //so we can add different colors to different magnitudes later
+
+    // console.log(mag);
     //formatting the position of our markers to be at our calculated
     //latitude and longitude variables above.
     var quakePosition = {lat:latitude, lng:longitude};
-    markQuake(quakePosition, map);
-
-    //sanity check: see how our lat and lng data looks
-		console.log(`latitude: ${latitude}, longitude: ${longitude}, time: ${time}, ${hoursAgo} hours ago`);
-
-    //append the location and hours ago of each quake
+    if(mag > 3){
+      markQuake(quakePosition, map, mag);
+    };
+    //append the title and hours ago of each quake
+    if (mag > 3){
 		$("#info").append(`<p>${title} / ${hoursAgo} hours ago</p>`);
+
+    };
+    //sanity check: see how our lat and lng data looks
+		// console.log(`latitude: ${latitude}, longitude: ${longitude}, time: ${time}, ${hoursAgo} hours ago`);
     //end of forEach loop
 	});
   //end onSuccess function
@@ -69,7 +100,7 @@ function onError(xhr, status, errorThrown) {
 	console.log("Error: " + errorThrown);
 	console.log("Status: " + status);
 	console.dir(xhr);
-	alert("Sorry, there was a problem!");
+	console.log("Sorry, there was a problem!");
 }
 
 //We could run this function initMap() at the start of onSuccess to create map,
@@ -83,9 +114,18 @@ function onError(xhr, status, errorThrown) {
 
 // }
 
-function markQuake(position, map) {
-	var markerImage = {
-    url: "images/earthquake.png", // url of icon
+
+function markQuake(position, map, mag) {
+  var imageUrl = '';
+  if(mag <= 4){
+    imageUrl = "images/earthquake.png";
+  } else if(mag <= 5){
+    imageUrl = "images/yellow_mag.png";
+  } else {
+    imageUrl = "images/red_mag.png";
+  }
+  var markerImage = {
+    url: imageUrl, // url of icon, based on the if statement above
     scaledSize: new google.maps.Size(20, 20), // scaled size
     origin: new google.maps.Point(0,0), // origin
     anchor: new google.maps.Point(0, 0) // anchor
@@ -107,3 +147,4 @@ function getRecentQuake(json){
   //return the recentPosition so we can use it inside our onSuccess fn
 	return recentPosition;
 }
+//add visual indicators for quake magnitude.
